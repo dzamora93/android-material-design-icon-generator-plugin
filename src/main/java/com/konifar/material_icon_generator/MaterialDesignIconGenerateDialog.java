@@ -15,6 +15,7 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jetbrains.android.facet.AndroidFacet;
+import org.jetbrains.android.facet.SourceProviderManager;
 import org.jetbrains.android.util.AndroidUtils;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.NamedNodeMap;
@@ -44,9 +45,11 @@ import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /*
  * Copyright 2014-2015 Material Design Icon Generator (Yusuke Konishi)
@@ -85,8 +88,8 @@ public class MaterialDesignIconGenerateDialog extends DialogWrapper {
 
     private static final String DEFAULT_RES_DIR = "/app/src/main/res";
 
-    private Project project;
-    private IconModel model;
+    private final Project project;
+    private final IconModel model;
     private Map<String, String> colorPaletteMap;
 
     private JPanel panelMain;
@@ -320,9 +323,10 @@ public class MaterialDesignIconGenerateDialog extends DialogWrapper {
         List<AndroidFacet> facets = AndroidUtils.getApplicationFacets(project);
         // This code needs refined to support multiple facets and multiple resource directories
         if (facets.size() >= 1) {
-            List<VirtualFile> allResourceDirectories = facets.get(0).getAllResourceDirectories();
+            AndroidFacet facet = facets.get(0);
+            Collection<VirtualFile> allResourceDirectories = SourceProviderManager.Companion.getInstance(facet).getMainIdeaSourceProvider().getResDirectories();
             if (allResourceDirectories.size() >= 1) {
-                resDirectoryName.setText(allResourceDirectories.get(0).getCanonicalPath());
+                resDirectoryName.setText(allResourceDirectories.iterator().next().getCanonicalPath());
             }
         }
         resDirectoryName.addBrowseFolderListener(new TextBrowseFolderListener(
